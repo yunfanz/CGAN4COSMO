@@ -19,6 +19,7 @@ flags.DEFINE_integer("output_height", 32, "The size of the output images to prod
 flags.DEFINE_integer("output_width", 16, "The size of the output images to produce. If None, same value as output_height [None]")
 flags.DEFINE_string("dataset", "celebA", "The name of dataset [celebA, mnist, lsun]")
 flags.DEFINE_string("input_fname_pattern", "*.npz", "Glob pattern of filename of input images [*]")
+flags.DEFINE_string("data_dir", "../Data", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("train_dir", "./tmp/train", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
 flags.DEFINE_boolean("train", True, "True for training, False for testing [False]")
@@ -73,7 +74,8 @@ def main(_):
           input_fname_pattern=FLAGS.input_fname_pattern,
           crop=FLAGS.crop,
           train_dir=FLAGS.train_dir,
-          sample_dir=FLAGS.sample_dir)
+          sample_dir=FLAGS.sample_dir,
+          data_dir=FLAGS.data_dir)
     else:
       dcgan = DCGAN(
           sess,

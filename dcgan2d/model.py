@@ -16,9 +16,9 @@ def conv_out_size_same(size, stride):
 class DCGAN(object):
     def __init__(self, sess, input_height=108, input_width=108, crop=True,
                  batch_size=64, sample_num=16, output_height=64, output_width=64,
-                 y_dim=None, z_dim=100, gf_dim=64, df_dim=64,
+                 y_dim=None, z_dim=1, gf_dim=64, df_dim=64,
                  gfc_dim=1024, dfc_dim=1024, c_dim=3, dataset_name='default',
-                 input_fname_pattern='*.jpg', train_dir=None, sample_dir=None):
+                 input_fname_pattern='*.jpg', train_dir=None, sample_dir=None, data_dir=None):
         """
 
         Args:
@@ -43,6 +43,8 @@ class DCGAN(object):
         self.output_height = output_height
         self.output_width = output_width
 
+        self.data_dir = data_dir
+
         self.y_dim = y_dim
         self.z_dim = z_dim
 
@@ -62,9 +64,7 @@ class DCGAN(object):
         self.g_bn0 = batch_norm(name='g_bn0')
         self.g_bn1 = batch_norm(name='g_bn1')
         self.g_bn2 = batch_norm(name='g_bn2')
-
-        if not self.y_dim:
-            self.g_bn3 = batch_norm(name='g_bn3')
+        self.g_bn3 = batch_norm(name='g_bn3')
 
         self.dataset_name = dataset_name
         self.input_fname_pattern = input_fname_pattern
@@ -403,7 +403,7 @@ class DCGAN(object):
 
     def generator(self, z, y=None):
         with tf.variable_scope("generator") as scope:
-            if not self.y_dim:
+            if True:
                 s_h, s_w = self.output_height, self.output_width
                 s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
                 s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
@@ -411,11 +411,11 @@ class DCGAN(object):
                 s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
                 # project `z` and reshape
-                self.z_, self.h0_w, self.h0_b = linear(
-                        z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin', with_w=True)
+                self.y_, self.h0_w, self.h0_b = linear(
+                        y, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin', with_w=True)
 
                 self.h0 = tf.reshape(
-                        self.z_, [-1, s_h16, s_w16, self.gf_dim * 8])
+                        self.y_, [-1, s_h16, s_w16, self.gf_dim * 8])
                 h0 = tf.nn.relu(self.g_bn0(self.h0))
 
                 self.h1, self.h1_w, self.h1_b = deconv2d(
@@ -466,7 +466,7 @@ class DCGAN(object):
         with tf.variable_scope("generator") as scope:
             scope.reuse_variables()
 
-            if not self.y_dim:
+            if True:
                 s_h, s_w = self.output_height, self.output_width
                 s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
                 s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
@@ -475,7 +475,7 @@ class DCGAN(object):
 
                 # project `z` and reshape
                 h0 = tf.reshape(
-                        linear(z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin'),
+                        linear(y, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin'),
                         [-1, s_h16, s_w16, self.gf_dim * 8])
                 h0 = tf.nn.relu(self.g_bn0(h0, train=False))
 
@@ -551,7 +551,7 @@ class DCGAN(object):
         
         return X/255.,y_vec
     def load_pspec(self):
-        dataset = os.path.join("/data1/21cmFast/pspec_emulator/", self.dataset_name)
+        dataset = os.path.join(self.data_dir, self.dataset_name)
         if not dataset.endswith('npz'):
             dataset = dataset+'.npz'
         dic = np.load(dataset)
