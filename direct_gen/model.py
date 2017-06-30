@@ -177,11 +177,10 @@ class DCGAN(object):
 
         self.writer = SummaryWriter(config.train_dir, self.sess.graph)
 
-        if True:
-            sample_inputs = self.data_X[0:self.sample_num]
-            sample_labels = self.data_y[0:self.sample_num]
+        sample_inputs = self.data_X[0:self.sample_num]
+        sample_labels = self.data_y[0:self.sample_num]
         
-        save_images(sample_inputs, image_manifold_size(sample_inputs.shape[0]),
+        save_images(sample_inputs*self.ps_std, image_manifold_size(sample_inputs.shape[0]),
                                     './{}/real_samples.png'.format(config.sample_dir))
     
         counter = 1
@@ -231,15 +230,16 @@ class DCGAN(object):
                         % (epoch, idx, batch_idxs,
                             time.time() - start_time, errG))
 
-                if np.mod(counter, 100) == 1:
+                if np.mod(counter, 500) == 1:
                     #print('S',sample_inputs.shape, self.inputs.get_shape())
                     samples, g_loss = self.sess.run(
                         [self.sampler, self.g_loss],
                         feed_dict={
                                 self.inputs: sample_inputs,
-                                self.y:sample_labels,
+                                self.y: sample_labels,
                         }
                     )
+                    samples *= self.ps_std
                     save_images(samples, image_manifold_size(samples.shape[0]),
                                 './{}/train_{:02d}_{:04d}.png'.format(config.sample_dir, epoch, idx))
                     print("[Sample]  g_loss: %.8f" % (g_loss)) 
